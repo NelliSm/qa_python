@@ -1,3 +1,4 @@
+import pytest
 from main import BooksCollector
 
 
@@ -5,52 +6,78 @@ class TestBooksCollector:
 
     def test_add_new_book_add_two_books(self):
         collector = BooksCollector()
-        collector.add_new_book('Tintin')
-        collector.add_new_book('Под куполом')
+        collector.add_new_book('Золотой ключик')
+        collector.add_new_book('12 стульев')
         assert len(collector.get_books_genre()) == 2
 
-    def test_add_new_book_add_new_book(self):
+    @pytest.mark.parametrize('title', ['Понедельник начинается в субботу', 'Золотой теленок'])
+    def test_add_new_book_add_books(self, title):
         collector = BooksCollector()
-        collector.add_new_book('Убийство в Восточном экспрессе')
-        assert 'Убийство в Восточном экспрессе' in collector.books_genre
+        collector.add_new_book(title)
+        assert title in collector.get_books_genre()
+
+    @pytest.mark.parametrize("invalid_title, expected_result",
+                             [('', False), ('Странная история доктора Джекила и мистера Хайда', False)])
+    def test_add_new_book_boundary_values_of_the_input_data(self, invalid_title, expected_result):
+        collector = BooksCollector()
+        collector.add_new_book(invalid_title)
+        assert (invalid_title in collector.get_books_genre()) == expected_result
 
     def test_set_book_genre_add_genre(self):
         collector = BooksCollector()
+        collector.add_new_book('Tintin')
+        collector.add_new_book('Под куполом')
         collector.set_book_genre('Tintin', 'Мультфильмы')
-        collector.set_book_genre('Убийство в Восточном экспрессе', 'Детективы')
         collector.set_book_genre('Под куполом', 'Ужасы')
-        assert {'Tintin': 'Мультфильмы'}
+        assert collector.get_book_genre('Tintin') == 'Мультфильмы'
 
     def test_get_book_genre_output_genre(self):
         collector = BooksCollector()
-        collector.get_book_genre('Убийство в Восточном экспрессе')
-        assert {'Убийство в Восточном экспрессе': 'Детективы'}
+        collector.add_new_book('Убийство в Восточном экспрессе')
+        collector.set_book_genre('Убийство в Восточном экспрессе', 'Детективы')
+        assert collector.get_book_genre('Убийство в Восточном экспрессе') == 'Детективы'
 
     def test_get_books_with_specific_genre_output_specific_genre(self):
         collector = BooksCollector()
-        collector.get_books_with_specific_genre('Детективы')
-        assert 'Детективы' in collector.genre_age_rating
+        collector.add_new_book('Убийство в Восточном экспрессе')
+        collector.add_new_book('Под куполом')
+        collector.add_new_book('Сияние')
+        collector.set_book_genre('Убийство в Восточном экспрессе', 'Детективы')
+        collector.set_book_genre('Под куполом', 'Ужасы')
+        collector.set_book_genre('Сияние', 'Ужасы')
+        assert collector.get_books_with_specific_genre('Ужасы') == ['Под куполом', 'Сияние']
 
     def test_get_books_genre_current_dictionary(self):
         collector = BooksCollector()
-        assert collector.get_books_genre
+        collector.add_new_book('Убийство в Восточном экспрессе')
+        collector.set_book_genre('Убийство в Восточном экспрессе', 'Детективы')
+        assert collector.get_books_genre() == {'Убийство в Восточном экспрессе': 'Детективы'}
 
-    def test_get_books_for_children_rating_book_kids(self):
+    @pytest.mark.parametrize('genre', ['Мультфильмы', 'Комедии', 'Фантастика'])
+    def test_get_books_for_children_len_books_for_children_one(self, genre):
         collector = BooksCollector()
-        collector.get_books_for_children()
-        assert collector.get_books_for_children() != ['Ужасы', 'Детективы']
+        title_1 = '12 стульев'
+        collector.add_new_book(title_1)
+        collector.set_book_genre(title_1, 'Комедии')
+        assert len(collector.get_books_for_children()) == 1
 
     def test_add_book_in_favorites_add_this_book_favorite(self):
         collector = BooksCollector()
-        collector.add_book_in_favorites('Убийство в Восточном экспрессе')
-        assert collector.add_book_in_favorites('Убийство в Восточном экспрессе') != ['Tintin']
+        collector.add_new_book('Tintin')
+        collector.add_book_in_favorites('Tintin')
+        assert 'Tintin' in collector.get_list_of_favorites_books()
 
     def test_delete_book_from_favorites_del_this_book_favorite(self):
         collector = BooksCollector()
-        collector.delete_book_from_favorites('Девушка в поезде')
-        assert (collector.delete_book_from_favorites('Девушка в поезде'), 'Этой книги нет в списке')
+        collector.add_new_book('Tintin')
+        collector.add_book_in_favorites('Tintin')
+        collector.delete_book_from_favorites('Tintin')
+        assert 'Tintin' not in collector.get_list_of_favorites_books()
 
     def test_get_list_of_favorites_books_get_one_favorite_book(self):
         collector = BooksCollector()
-        collector.get_list_of_favorites_books()
-        assert 'Убийство в Восточном экспрессе'
+        collector.add_new_book('Tintin')
+        collector.add_new_book('Понедельник начинается в субботу')
+        collector.add_book_in_favorites('Tintin')
+        collector.add_book_in_favorites('Понедельник начинается в субботу')
+        assert collector.get_list_of_favorites_books() == ['Tintin', 'Понедельник начинается в субботу']
