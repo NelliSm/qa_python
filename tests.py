@@ -23,14 +23,16 @@ class TestBooksCollector:
         collector.add_new_book(invalid_title)
         assert (invalid_title in collector.get_books_genre()) == expected_result
 
-    def test_set_book_genre_add_genre(self):
+    '''Метод изменен. Замена на проверку отсутствия жанра у добавленной книги, если его нет в списке жанров'''
+    def test_set_book_genre_add_genre_not_list(self):
         collector = BooksCollector()
         collector.add_new_book('Tintin')
         collector.add_new_book('Под куполом')
         collector.set_book_genre('Tintin', 'Мультфильмы')
-        collector.set_book_genre('Под куполом', 'Ужасы')
-        assert collector.get_book_genre('Tintin') == 'Мультфильмы'
+        collector.set_book_genre('Под куполом', 'Научная фантастика')
+        assert '' == collector.get_book_genre('Под куполом')
 
+    '''Метод оставлен без изменений'''
     def test_get_book_genre_output_genre(self):
         collector = BooksCollector()
         collector.add_new_book('Убийство в Восточном экспрессе')
@@ -53,13 +55,14 @@ class TestBooksCollector:
         collector.set_book_genre('Убийство в Восточном экспрессе', 'Детективы')
         assert collector.get_books_genre() == {'Убийство в Восточном экспрессе': 'Детективы'}
 
-    @pytest.mark.parametrize('genre', ['Мультфильмы', 'Комедии', 'Фантастика'])
-    def test_get_books_for_children_len_books_for_children_one(self, genre):
+    '''Метод изменен. Проверка, что возвращаются книги жанров, подходящих для детей'''
+    def test_get_books_for_children_books_for_children_genre(self):
         collector = BooksCollector()
-        title_1 = '12 стульев'
-        collector.add_new_book(title_1)
-        collector.set_book_genre(title_1, 'Комедии')
-        assert len(collector.get_books_for_children()) == 1
+        collector.add_new_book('12 стульев')
+        collector.set_book_genre('12 стульев', 'Комедии')
+        collector.add_new_book('Тайна отца Брауна')
+        collector.set_book_genre('Тайна отца Брауна', 'Детективы')
+        assert collector.get_books_for_children() == ['12 стульев']
 
     def test_add_book_in_favorites_add_this_book_favorite(self):
         collector = BooksCollector()
